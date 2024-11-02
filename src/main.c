@@ -19,12 +19,12 @@ typedef struct hash {
 
 typedef struct {
     char* svg_dat;
-    hash hash_map;
+    hash* hash_map;
     size_t length;
 } wrapper;
 
 char test_svg[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1920 1080\" preserveAspectRatio=\"xMidYMid slice\"><rect x=\"-0.272\" y=\"-1.493\" width=\"1923.244\" height=\"1081.065\" style=\"fill: $sun_color$;\"/><ellipse style=\"fill: rgb(241, 234, 151);\" cx=\"466.112\" cy=\"269.946\" rx=\"174.149\" ry=\"174.149\"/><text style=\"fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 48px; white-space: pre;\" x=\"833.25\" y=\"507.897\">$greet_day$</text></svg>";
-hash test[] = {
+hash test_maps[] = {
   {"sun_color", "rgb(0, 0, 0)", color},
   {"greet_day", "Good night boy", quote},
 };
@@ -35,7 +35,7 @@ void clear_buffer(char* buffer) {
     }
 }
 
-wrapper wrapper_init(char svg_dat[], hash mappings) {
+wrapper wrapper_init(char svg_dat[], hash mappings[]) {
     return (wrapper) {
         .svg_dat = strdup(svg_dat),
         .hash_map = mappings,
@@ -61,9 +61,9 @@ char* replace_identifier(char svg[]) {
                 buffer[k++] = svg[i++];
             }
             for (k = 0; k < 2; k++) { // limit of k should be decided.
-                if (strcmp(buffer, test[k].id) == 0) {
-                    for (int l = 0; l < strlen(test[k].value); l++) {
-                        modified_svg[j++] = test[k].value[l];
+                if (strcmp(buffer, test_maps[k].id) == 0) {
+                    for (int l = 0; l < strlen(test_maps[k].value); l++) {
+                        modified_svg[j++] = test_maps[k].value[l];
                     }
                 }
             }
@@ -73,7 +73,7 @@ char* replace_identifier(char svg[]) {
 }
 
 int main() {
-    // replace_identifier(test_svg);
+    wrapper test = wrapper_init(test_svg, test_maps);
     printf("%s\n", replace_identifier(test_svg));
     return 0;
 }
