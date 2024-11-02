@@ -6,7 +6,7 @@ all: debug
 
 debug: arena list
 ### write the compilation commands here ###
-	$(CC) $(CFLAGS) $(OBJ_DIR)/list.o $(OBJ_DIR)/arena.o src/main.c -o target/debug
+	$(CC) $(CFLAGS) $(OBJ_DIR)/list.o $(OBJ_DIR)/arena.o src/main.c -o ./debug
 
 list:
 	$(CC) -c ./lib/list.c -o $(OBJ_DIR)/list.o $(CFLAGS)
