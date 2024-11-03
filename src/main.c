@@ -107,8 +107,12 @@ int main() {
 
     wrapper w = init_paws();
     char* svg = replace_identifiers(w);
+
     const char output_file[] = "out.svg";
     write_to_file(output_file, svg, strlen(svg));
+
+    list_free(&w.hash_map);
+    arena_free(arena);
     return 0;
 }
 
