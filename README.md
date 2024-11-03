@@ -20,6 +20,12 @@ There are a predetermined set of svg files with custom identifiers placed in des
 - list.h
 > It is a custom implementation of doubly linked list using Arena allocator.
 
+### To-do:
+- Memory management & remove unused functions
+- Implement a script for handling wallpapers on the system based on time or other events
+- Add more preset svg's
+- make a way for the user to select a presets 
+
 ## Contributers
 - [BATMAN6666-007](https://github.com/BATMAN6666-007)
 - [Lunarmist](https://github.com/Lunarmist-byte)
