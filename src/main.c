@@ -1,4 +1,4 @@
-// welcome to c programing
+// this is an unfinished work.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
