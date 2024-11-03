@@ -1,31 +1,128 @@
-// this is an unfinished work.
+
+// this program is unfinished.
+// it may have critical bugs and it is poorly disigned 
+// since it is created in a rush for a hackathon program.
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <threads.h>
 #include <time.h>
+#include "../include/list.h"
+#include "../include/arena.h"
 
 bool is_light;
-
-typedef enum {
-    color,
-    quote,
-    position,
-    size,
-} identifier_type;
+Arena* arena;
 
 typedef struct hash {
     char* id;
     char* value;
-    identifier_type type;
 } hash;
 
 typedef struct {
     char* svg_dat;
-    hash* hash_map;
+    List hash_map;
     size_t hash_length;
 } wrapper;
+
+char* hsvToRgb(float h, float s, float v);
+char* greet(); // returns greeting message based on time of the day.
+int get_random_range(int x, int y);
+char* get_quote(); // returns random motivational quotes
+void clear_buffer(char* buffer, size_t size);
+char* num_to_str(int num);
+char* read_file_content(const char* filename);
+static char* join_int_str(char* str, int num);
+int write_to_file(const char* filename, const char* data, size_t length);
+
+wrapper wrapper_init(char svg_dat[], List* mappings, size_t length) {
+    return (wrapper) {
+        .svg_dat = strdup(svg_dat),
+        .hash_map = *mappings,
+        .hash_length = length,
+    };
+}
+
+hash* hash_init(char* id, char* value) {
+    hash* map = arena_alloc(arena, sizeof(hash));
+    map->id = id;
+    map->value = value;
+    return map;
+}
+
+// preset for current svg image
+wrapper init_paws() {
+    char* svg_dat = read_file_content("./assets/paws_template.svg");
+    size_t no_of_entries = 14;
+    List mappings = list_init(sizeof(hash) * no_of_entries, sizeof(hash));
+    list_insert_at_rear(&mappings, hash_init( "theme", "rgb(238,238,238)"));
+    list_insert_at_rear(&mappings, hash_init("greeting", get_quote()));
+
+    for (int i = 1; i < 7; i++) {
+        list_insert_at_rear(&mappings, hash_init(join_int_str("circle_color", i),hsvToRgb(get_random_range(0, 300), 0.2f, 0.8f)));
+    }
+
+    for (int j = 1, i = 7; i < 13; i++) {
+        list_insert_at_rear(&mappings, hash_init(join_int_str("circle_radius", j++) ,num_to_str(get_random_range(35, 80))));
+    }
+    
+    return wrapper_init(svg_dat, &mappings, no_of_entries);
+}
+
+char* replace_identifiers(wrapper preset) {
+    char *modified_svg = (char*)malloc(strlen(preset.svg_dat) * 2);
+    char buffer[30];
+    size_t j = 0, k;
+    for (int i = 0; preset.svg_dat[i] != '\0'; i++) {
+        if (preset.svg_dat[i] != '\\' && preset.svg_dat[i] != '$') {
+            modified_svg[j++] = preset.svg_dat[i];
+        }
+        if (preset.svg_dat[i] == '$') {
+            k = 0;
+            clear_buffer(buffer, 30);
+            i++;
+            while (preset.svg_dat[i] != '$') {
+             buffer[k++] = preset.svg_dat[i++];
+            }
+
+            for (k = 0; k < preset.hash_length; k++) { 
+                hash tmp = *(hash*)list_peekat(&preset.hash_map, k);
+                if (strcmp(buffer, tmp.id) == 0) {
+                    for (int l = 0; l < strlen(tmp.value); l++) {
+                        modified_svg[j++] = tmp.value[l];
+                    }
+                }
+            }
+        }
+    }
+    return (char*)strdup(modified_svg);
+}
+
+
+int main() {
+    srand(time(NULL));
+    arena = arena_init(ARENA_256);
+
+    wrapper w = init_paws();
+    char* svg = replace_identifiers(w);
+    const char output_file[] = "out.svg";
+    write_to_file(output_file, svg, strlen(svg));
+    return 0;
+}
+
+int write_to_file(const char* filename, const char* data, size_t length) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        return -1;    
+    }
+    
+    size_t written = fwrite(data, 1, length, file);
+    fclose(file);
+    
+    return (written == length) ? 0 : -1;   
+}
 
 char* hsvToRgb(float h, float s, float v) {
     float red, green, blue;
@@ -74,7 +171,6 @@ char* hsvToRgb(float h, float s, float v) {
     }
     return result;
 }
-
 char* greet() {
     time_t now;
     now = time(NULL);
@@ -95,7 +191,6 @@ char* greet() {
 }
 
 int get_random_range(int x, int y) {
-    srand(time(0));
     if (x > y) {
         int temp = x;
         x = y;
@@ -124,54 +219,11 @@ char* get_quote() {
     return quotes[index];
 }
 
-char test_svg[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1920 1080\" preserveAspectRatio=\"xMidYMid slice\"><rect x=\"-0.272\" y=\"-1.493\" width=\"1923.244\" height=\"1081.065\" style=\"fill: $sun_color$;\"/><ellipse style=\"fill: rgb(241, 234, 151);\" cx=\"466.112\" cy=\"269.946\" rx=\"174.149\" ry=\"174.149\"/><text style=\"fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 48px; white-space: pre;\" x=\"833.25\" y=\"507.897\">$greet_day$</text></svg>";
-hash test_maps[] = {
-  {"sun_color", "rgb(0, 0, 0)", color},
-  {"greet_day", "asdf", quote},
-};
-
-
-void clear_buffer(char* buffer) {
-    for (size_t i = 0; buffer[i] != '\0'; i++) {
-        buffer[i] = '\0';
-    }
-}
-
-wrapper wrapper_init(char svg_dat[], hash mappings[], size_t length) {
-    return (wrapper) {
-        .svg_dat = strdup(svg_dat),
-        .hash_map = mappings,
-        .hash_length = length,
-    };
-}
-
-char* num_to_str(int num) {
-    char buff[20];
-    sprintf(buff, "%d", num);
-    return strdup(buff);
-}
-
-char* readFileLineByLine(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    char *lines = malloc(1024);  // Buffer for each line
-    if (file == NULL) {
-        printf("Error opening file: %s\n", filename);
-        return NULL;
-    }
-    while (fgets(lines, sizeof(lines), file) != NULL) {
-        printf("%s", lines);
-    }
-    fclose(file);
-    return lines;
-}
-
 char* read_file_content(const char* filename) {
-    // Open file
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         return NULL;
     }
-    // Get file size
     if (fseek(file, 0, SEEK_END) != 0) {
         fclose(file);
         return NULL;
@@ -181,84 +233,37 @@ char* read_file_content(const char* filename) {
         fclose(file);
         return NULL;
     }
-    // Return to start of file
     rewind(file);
-    // Allocate memory for file content plus null terminator
     char* content = (char*)malloc(file_size + 1);
     if (content == NULL) {
         fclose(file);
         return NULL;
     }
-    // Read file content
     size_t read_size = fread(content, 1, file_size, file);
     if (read_size != (size_t)file_size) {
         free(content);
         fclose(file);
         return NULL;
     }
-    // Null terminate the string
     content[read_size] = '\0';
 
-    // Clean up
     fclose(file);
     return content;
 }
 
-wrapper init_paws() {
-    char* svg_dat = read_file_content("./assets/paws_template.svg");
-    printf("%s", svg_dat);
-
-    hash map[13] = {
-        {"theme", (is_light) ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)", color},
-        {"circle_color1", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_color2", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_color3", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_color4", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_color5", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_color6", hsvToRgb(get_random_range(0, 360), 0.22, 0.8), color},
-        {"circle_radius1", num_to_str(get_random_range(35, 80)), size},
-        {"circle_radius2", num_to_str(get_random_range(35, 80)), size},        
-        {"circle_radius3", num_to_str(get_random_range(35, 80)), size},
-        {"circle_radius4", num_to_str(get_random_range(35, 80)), size},
-        {"circle_radius5", num_to_str(get_random_range(35, 80)), size},
-        {"circle_radius6", num_to_str(get_random_range(35, 80)), size},
-    };
-
-    return wrapper_init(svg_dat, map, 13);
-}
-
-char* replace_identifier(wrapper preset) {
-    char *modified_svg = (char*)malloc(strlen(preset.svg_dat) * 2);
-    char buffer[30];
-    size_t j = 0, k;
-    for (int i = 0; preset.svg_dat[i] != '\0'; i++) {
-        if (preset.svg_dat[i] != '\\' && preset.svg_dat[i] != '$') {
-            modified_svg[j++] = preset.svg_dat[i];
-        }
-        if (preset.svg_dat[i] == '$') {
-            k = 0;
-            clear_buffer(buffer);
-            i++;
-            while (preset.svg_dat[i] != '$') {
-             buffer[k++] = preset.svg_dat[i++];
-            }
-
-            for (k = 0; k < preset.hash_length; k++) { 
-                if (strcmp(buffer, preset.hash_map[k].id) == 0) {
-                    for (int l = 0; l < strlen(preset.hash_map[k].value); l++) {
-                        modified_svg[j++] = preset.hash_map[k].value[l];
-                    }
-                }
-            }
-        }
+void clear_buffer(char* buffer, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] = '\0';
     }
-    return (char*)strdup(modified_svg);
+}
+char* num_to_str(int num) {
+    char buff[20];
+    sprintf(buff, "%d", num);
+    return strdup(buff);
 }
 
-
-
-int main() {
-    wrapper w = init_paws();
-    printf("%s\n", replace_identifier(w));
-    return 0;
+static char* join_int_str(char* str, int num) {
+    char *buffer = arena_alloc(arena, strlen(str) + 2);
+    sprintf(buffer, "%s%d", str, num);
+    return buffer;
 }

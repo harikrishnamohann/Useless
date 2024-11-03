@@ -1,2 +1,2 @@
-make && ./debug $@
+make && ./target/debug $@
 
