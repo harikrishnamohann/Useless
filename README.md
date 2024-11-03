@@ -12,7 +12,18 @@ This is a c program to create infinite variations of an svg image preset using b
 
 ### How it works?
 There are a predetermined set of svg files with custom identifiers placed in desired locations. The program reads the file and process it character by character, thereby replacing the identifiers using a key value pair. It outputs the modified text into out.svg file.
+### How to run it?
+This is made for linux systems only so you need a linux environment to run it.
+#### Preresequites:
+- gcc
+- make
 
+to run it, 
+1. make the run.sh executable. 
+> `chmod +x run.sh`
+
+2. execute run.sh
+> `./run.sh`
 ### Libraries used: 
 - Some C standard libraries
 - arena.h
