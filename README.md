@@ -20,7 +20,7 @@ This is made for pleasure only. There was no problem with my wallpapers in the f
 
 ### The Solution (that nobody asked for)
 A new wallpaper engine that nobody asked for. We couldn't reach there, but we made a base with the logic we intended to perform.
-The current state of this project only represent an api that can be used for building our clever little wallpaper engine (it is unfinished -_-).
+The current state of this project only represent an api that can be used for building our clever little wallpaper engine.
 
 ## Technical Details
 ### Technologies/Components Used
@@ -46,6 +46,7 @@ For Software:
 ### Installation
 1. clone the Repository using `git clone https://github.com/harikrishnamohann/Useless.git`
 2. go to the project folder: `cd ./Useless`
+3. create a folder named "obj" `mkdir ./obj`
 
 # Run
 ### For linux:
