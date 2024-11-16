@@ -3,17 +3,14 @@
 // it may have critical bugs and it is poorly disigned 
 // since it is created in a rush for a hackathon program.
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <threads.h>
 #include <time.h>
 #include "../include/list.h"
 #include "../include/arena.h"
 
-bool is_light;
 Arena* arena;
 
 typedef struct hash {
